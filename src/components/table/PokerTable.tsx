@@ -37,11 +37,13 @@ export function PokerTable({ gameState }: PokerTableProps) {
   const myPlayer = players.find(p => p.id === myPlayerId);
   const mySeatIndex = myPlayer?.seatIndex ?? 0;
 
-  // ショーダウン時のカードマップ
+  // ショーダウン時のカード・役名マップ
   const showdownCardMap = new Map<string, { rank: string; suit: string }[]>();
+  const handNameMap = new Map<string, string>();
   if (showdownResults) {
     for (const result of showdownResults) {
       showdownCardMap.set(result.playerId, result.cards as any);
+      handNameMap.set(result.playerId, result.handName);
     }
   }
 
@@ -53,28 +55,31 @@ export function PokerTable({ gameState }: PokerTableProps) {
   const totalPot = pots.reduce((sum, p) => sum + p.amount, 0);
 
   return (
-    <div className="relative w-full max-w-[800px] aspect-[16/10]">
+    <div className="relative w-full max-w-[1100px] aspect-[16/10]">
       {/* テーブル本体 */}
-      <div className="absolute inset-[8%] poker-table rounded-[50%]">
+      <div className="absolute inset-[6%] poker-table rounded-[50%]">
         {/* コミュニティカード */}
         <div className="absolute top-[38%] left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <div className="flex gap-2 justify-center">
+          <div className="flex gap-2.5 justify-center">
             {communityCards.map((card, i) => (
-              <CardComponent key={i} card={card} size="lg" />
+              <CardComponent key={i} card={card} size="xl" />
             ))}
             {/* 空スロット */}
             {Array.from({ length: 5 - communityCards.length }, (_, i) => (
-              <div key={`empty-${i}`} className="w-20 h-28 rounded-lg border border-white/10" />
+              <div
+                key={`empty-${i}`}
+                className="w-28 h-40 rounded-xl border-2 border-white/10 border-dashed"
+              />
             ))}
           </div>
         </div>
 
         {/* ポット */}
         {totalPot > 0 && (
-          <div className="absolute top-[55%] left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <div className="bg-black/40 rounded-full px-4 py-1.5">
-              <span className="text-gold font-bold text-sm">
-                Pot: {formatBB(totalPot)} BB
+          <div className="absolute top-[62%] left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <div className="bg-black/60 backdrop-blur-sm rounded-full px-5 py-2 border border-yellow-600/40 shadow-lg">
+              <span className="text-gold font-bold text-base">
+                POT: {formatBB(totalPot)} BB
               </span>
             </div>
           </div>
@@ -82,8 +87,8 @@ export function PokerTable({ gameState }: PokerTableProps) {
 
         {/* ラウンド表示 */}
         {gameState.phase === 'playing' && (
-          <div className="absolute top-[68%] left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <span className="text-white/40 text-xs uppercase tracking-wider">
+          <div className="absolute top-[72%] left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <span className="text-white/50 text-sm uppercase tracking-[0.3em] font-semibold">
               {gameState.round}
             </span>
           </div>
@@ -108,25 +113,40 @@ export function PokerTable({ gameState }: PokerTableProps) {
             position={SEAT_POSITIONS[posIndex]}
             showdownCards={player ? (showdownCardMap.get(player.id) as any) : null}
             bigBlind={bigBlind}
+            handName={player ? handNameMap.get(player.id) : undefined}
           />
         );
       })}
 
       {/* ショーダウン結果 */}
       {showdownResults && showdownResults.length > 0 && (
-        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full mt-2">
-          <div className="bg-gray-900/90 rounded-xl p-3 border border-gray-700 max-w-sm">
-            <h3 className="text-xs text-gray-400 mb-1 text-center">ショーダウン</h3>
-            {showdownResults.map((result, i) => {
-              const player = players.find(p => p.id === result.playerId);
-              return (
-                <div key={i} className={`text-xs ${result.potWon > 0 ? 'text-gold' : 'text-gray-400'} flex justify-between gap-4`}>
-                  <span>{player?.nickname}</span>
-                  <span>{result.handName}</span>
-                  {result.potWon > 0 && <span>+{formatBB(result.potWon)} BB</span>}
-                </div>
-              );
-            })}
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30">
+          <div className="bg-gray-900/95 backdrop-blur-sm rounded-xl p-4 border-2 border-gold/60 shadow-2xl min-w-[320px]">
+            <h3 className="text-sm text-gold font-bold mb-2 text-center tracking-[0.2em] uppercase">ショーダウン</h3>
+            <div className="space-y-1.5">
+              {showdownResults.map((result, i) => {
+                const player = players.find(p => p.id === result.playerId);
+                const isWinner = result.potWon > 0;
+                return (
+                  <div
+                    key={i}
+                    className={`text-sm flex justify-between items-center gap-4 px-3 py-1.5 rounded-lg ${
+                      isWinner ? 'bg-gold/20 border border-gold/40' : 'bg-gray-800/50'
+                    }`}
+                  >
+                    <span className={`font-bold ${isWinner ? 'text-gold' : 'text-gray-300'}`}>
+                      {player?.nickname}
+                    </span>
+                    <span className={`font-semibold ${isWinner ? 'text-white' : 'text-gray-400'}`}>
+                      {result.handName}
+                    </span>
+                    {isWinner && (
+                      <span className="text-gold font-black">+{formatBB(result.potWon)} BB</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

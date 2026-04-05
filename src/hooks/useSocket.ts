@@ -5,6 +5,7 @@ import { io, Socket } from 'socket.io-client';
 import { ClientToServerEvents, ServerToClientEvents } from '../types/socket-events';
 import { ClientGameState } from '../types/game';
 import { PlayerAction } from '../types/action';
+import { useSoundEffects } from './useSoundEffects';
 
 type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -19,6 +20,8 @@ interface UseSocketReturn {
   startGame: () => void;
   sendAction: (action: PlayerAction) => void;
   useTimeBank: () => void;
+  soundEnabled: boolean;
+  toggleSound: () => void;
 }
 
 export function useSocket(): UseSocketReturn {
@@ -26,6 +29,17 @@ export function useSocket(): UseSocketReturn {
   const [isConnected, setIsConnected] = useState(false);
   const [gameState, setGameState] = useState<ClientGameState | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { play: playSound, enabled: soundEnabled, toggleEnabled: toggleSound } = useSoundEffects();
+  // playSoundの最新参照を保持（useEffect内で使用するため）
+  const playSoundRef = useRef(playSound);
+  useEffect(() => {
+    playSoundRef.current = playSound;
+  }, [playSound]);
+
+  // プレイヤーのターン変化とタイマー警告を追跡するためのref
+  const lastCurrentPlayerRef = useRef<number>(-1);
+  const lastMyTurnRef = useRef<boolean>(false);
+  const lastTimerRef = useRef<number>(0);
 
   useEffect(() => {
     const socket = io({
@@ -48,6 +62,60 @@ export function useSocket(): UseSocketReturn {
 
     socket.on('game:state', (state) => {
       setGameState(state);
+
+      // 自分のターンになった瞬間に通知音
+      const isMyTurn = !!state.availableActions;
+      if (isMyTurn && !lastMyTurnRef.current) {
+        playSoundRef.current('yourTurn');
+      }
+      lastMyTurnRef.current = isMyTurn;
+
+      // タイマー警告（残り5秒以下で1秒ごと）
+      if (isMyTurn && state.actionTimerRemaining > 0 && state.actionTimerRemaining <= 5) {
+        if (state.actionTimerRemaining !== lastTimerRef.current) {
+          playSoundRef.current('timerWarn');
+        }
+      }
+      lastTimerRef.current = state.actionTimerRemaining;
+      lastCurrentPlayerRef.current = state.currentPlayerIndex;
+    });
+
+    // プレイヤーアクションの効果音
+    socket.on('game:action', (data) => {
+      const action = data.action;
+      switch (action) {
+        case 'fold':
+          playSoundRef.current('fold');
+          break;
+        case 'check':
+          playSoundRef.current('check');
+          break;
+        case 'call':
+          playSoundRef.current('chip');
+          break;
+        case 'raise':
+          playSoundRef.current('raise');
+          break;
+        case 'allIn':
+          playSoundRef.current('allIn');
+          break;
+      }
+    });
+
+    // 新しいハンド
+    socket.on('game:newHand', () => {
+      playSoundRef.current('deal');
+    });
+
+    // ショーダウン
+    socket.on('game:showdown', () => {
+      // 短いディレイで配布音
+      setTimeout(() => playSoundRef.current('deal'), 100);
+    });
+
+    // 勝者
+    socket.on('game:winner', () => {
+      playSoundRef.current('win');
     });
 
     socket.on('error', (data) => {
@@ -58,6 +126,8 @@ export function useSocket(): UseSocketReturn {
     return () => {
       socket.disconnect();
     };
+    // playSoundは安定したrefから取得するため依存配列に入れない
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const joinRoom = useCallback((roomId: string, nickname: string) => {
@@ -110,5 +180,7 @@ export function useSocket(): UseSocketReturn {
     startGame,
     sendAction,
     useTimeBank,
+    soundEnabled,
+    toggleSound,
   };
 }
