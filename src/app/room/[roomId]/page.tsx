@@ -123,16 +123,18 @@ export default function RoomPage() {
       </div>
 
       {/* ポーカーテーブル */}
-      <div className="flex-1 flex items-center justify-center sm:p-4 min-h-0">
+      <div className="flex-1 flex items-center justify-center sm:p-4 min-h-0 overflow-hidden">
         <PokerTable gameState={gameState} />
       </div>
 
       {/* アクションパネル */}
+      <div className="shrink-0">
       <ActionPanel
         gameState={gameState}
         onAction={sendAction}
         onUseTimeBank={useTimeBank}
       />
+      </div>
 
       {/* サウンドトグルボタン */}
       <button

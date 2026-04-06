@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { ClientGameState } from '../../types/game';
 import { PlayerAction } from '../../types/action';
+import { CardComponent } from '../table/Card';
 
 interface ActionPanelProps {
   gameState: ClientGameState;
@@ -18,7 +19,7 @@ function formatBB(amount: number, bigBlind: number): string {
 }
 
 export function ActionPanel({ gameState, onAction, onUseTimeBank }: ActionPanelProps) {
-  const { availableActions, currentBet, pots, actionTimerRemaining, actionTimerTotal, myTimeBankRemaining, blindLevel } = gameState;
+  const { availableActions, currentBet, pots, actionTimerRemaining, actionTimerTotal, myTimeBankRemaining, blindLevel, myCards } = gameState;
   const bigBlind = blindLevel.bigBlind;
   const [customRaiseAmount, setCustomRaiseAmount] = useState(0);
   const [showRaisePanel, setShowRaisePanel] = useState(false);
@@ -77,8 +78,20 @@ export function ActionPanel({ gameState, onAction, onUseTimeBank }: ActionPanelP
   // 自分のターンでない場合
   if (!isMyTurn) {
     return (
-      <div className="h-12 sm:h-16 bg-gray-900/90 border-t border-gray-800 flex items-center justify-center px-4">
-        <span className="text-gray-500 text-xs sm:text-sm">相手のアクションを待っています...</span>
+      <div className="bg-gray-900/90 border-t border-gray-800">
+        {/* 自分のカード表示（ターンでなくても表示） */}
+        {myCards && myCards.length === 2 && (
+          <div className="flex items-center justify-center gap-1.5 py-2 sm:py-3">
+            <CardComponent card={myCards[0]} size="md" />
+            <CardComponent card={myCards[1]} size="md" />
+            <span className="text-gray-500 text-xs sm:text-sm ml-3">相手のアクションを待っています...</span>
+          </div>
+        )}
+        {(!myCards || myCards.length === 0) && (
+          <div className="h-10 sm:h-12 flex items-center justify-center">
+            <span className="text-gray-500 text-xs sm:text-sm">相手のアクションを待っています...</span>
+          </div>
+        )}
       </div>
     );
   }
@@ -96,27 +109,36 @@ export function ActionPanel({ gameState, onAction, onUseTimeBank }: ActionPanelP
     <div className="bg-gray-900/95 border-t border-gray-800">
       {/* === スマホ版 === */}
       <div className="sm:hidden">
-        {/* YOUR TURN + タイマー */}
+        {/* YOUR TURN + タイマー + 自分のカード */}
         <div className="flex items-center justify-between px-3 py-1.5">
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse" />
-            <span className="text-yellow-400 text-xs font-black tracking-wider">YOUR TURN</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`text-sm font-mono font-black ${
-              actionTimerRemaining <= 10 ? 'text-red-400 animate-pulse' : 'text-white/70'
-            }`}>
-              {actionTimerRemaining}s
-            </span>
-            {myTimeBankRemaining > 0 && (
-              <button
-                onClick={onUseTimeBank}
-                className="px-2 py-1 bg-gray-700 text-gray-300 text-[10px] font-bold rounded border border-gray-600 active:bg-gray-600"
-              >
-                EXTRA TIME ({myTimeBankRemaining})
-              </button>
+            {/* 自分のカード */}
+            {myCards && myCards.length === 2 && (
+              <div className="flex gap-0.5">
+                <CardComponent card={myCards[0]} size="sm" />
+                <CardComponent card={myCards[1]} size="sm" />
+              </div>
             )}
+            <div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+                <span className="text-yellow-400 text-[10px] font-black tracking-wider">YOUR TURN</span>
+              </div>
+              <span className={`text-xs font-mono font-black ${
+                actionTimerRemaining <= 10 ? 'text-red-400 animate-pulse' : 'text-white/70'
+              }`}>
+                {actionTimerRemaining}s
+              </span>
+            </div>
           </div>
+          {myTimeBankRemaining > 0 && (
+            <button
+              onClick={onUseTimeBank}
+              className="px-2 py-1 bg-gray-700 text-gray-300 text-[10px] font-bold rounded border border-gray-600 active:bg-gray-600"
+            >
+              EXTRA TIME ({myTimeBankRemaining})
+            </button>
+          )}
         </div>
 
         {/* レイズパネル（展開時） */}
@@ -187,11 +209,11 @@ export function ActionPanel({ gameState, onAction, onUseTimeBank }: ActionPanelP
 
         {/* メインアクションボタン（PokerNow風1行） */}
         {!showRaisePanel && (
-          <div className="flex gap-1.5 px-2 pb-3 pt-1">
+          <div className="flex gap-1.5 px-2 pb-4 pt-0.5">
             {availableActions.canCall && (
               <button
                 onClick={() => onAction({ type: 'call' })}
-                className="flex-1 py-3 bg-gradient-to-b from-blue-600 to-blue-800 text-white font-black rounded-xl text-sm active:from-blue-500 active:to-blue-700 shadow-lg border border-blue-400/30"
+                className="flex-1 py-3 bg-gradient-to-b from-blue-600 to-blue-800 text-white font-black rounded-xl text-xs active:from-blue-500 active:to-blue-700 shadow-lg border border-blue-400/30"
               >
                 CALL {formatBB(availableActions.callAmount, bigBlind)}
               </button>
@@ -200,7 +222,7 @@ export function ActionPanel({ gameState, onAction, onUseTimeBank }: ActionPanelP
             {availableActions.canCheck && (
               <button
                 onClick={() => onAction({ type: 'check' })}
-                className="flex-1 py-3 bg-gradient-to-b from-gray-500 to-gray-700 text-white font-black rounded-xl text-sm active:from-gray-400 active:to-gray-600 shadow-lg border border-gray-400/30"
+                className="flex-1 py-3 bg-gradient-to-b from-gray-500 to-gray-700 text-white font-black rounded-xl text-xs active:from-gray-400 active:to-gray-600 shadow-lg border border-gray-400/30"
               >
                 CHECK
               </button>
@@ -212,7 +234,7 @@ export function ActionPanel({ gameState, onAction, onUseTimeBank }: ActionPanelP
                   setCustomRaiseAmount(availableActions.minRaise);
                   setShowRaisePanel(true);
                 }}
-                className="flex-1 py-3 bg-gradient-to-b from-emerald-600 to-emerald-800 text-white font-black rounded-xl text-sm active:from-emerald-500 active:to-emerald-700 shadow-lg border border-emerald-400/30"
+                className="flex-1 py-3 bg-gradient-to-b from-emerald-600 to-emerald-800 text-white font-black rounded-xl text-xs active:from-emerald-500 active:to-emerald-700 shadow-lg border border-emerald-400/30"
               >
                 {raiseLabel}
               </button>
@@ -221,16 +243,16 @@ export function ActionPanel({ gameState, onAction, onUseTimeBank }: ActionPanelP
             {availableActions.canAllIn && !availableActions.canRaise && !availableActions.canCall && (
               <button
                 onClick={() => onAction({ type: 'allIn' })}
-                className="flex-1 py-3 bg-gradient-to-b from-red-500 to-red-700 text-white font-black rounded-xl text-sm active:from-red-400 active:to-red-600 shadow-lg border border-red-300/30"
+                className="flex-1 py-3 bg-gradient-to-b from-red-500 to-red-700 text-white font-black rounded-xl text-xs active:from-red-400 active:to-red-600 shadow-lg border border-red-300/30"
               >
-                ALL IN {formatBB(availableActions.allInAmount, bigBlind)}
+                ALL IN
               </button>
             )}
 
             {availableActions.canAllIn && availableActions.canRaise && (
               <button
                 onClick={() => onAction({ type: 'allIn' })}
-                className="flex-1 py-3 bg-gradient-to-b from-red-500 to-red-700 text-white font-black rounded-xl text-sm active:from-red-400 active:to-red-600 shadow-lg border border-red-300/30"
+                className="flex-1 py-3 bg-gradient-to-b from-red-500 to-red-700 text-white font-black rounded-xl text-xs active:from-red-400 active:to-red-600 shadow-lg border border-red-300/30"
               >
                 ALL IN
               </button>
@@ -239,7 +261,7 @@ export function ActionPanel({ gameState, onAction, onUseTimeBank }: ActionPanelP
             {availableActions.canFold && (
               <button
                 onClick={() => onAction({ type: 'fold' })}
-                className="flex-1 py-3 bg-gradient-to-b from-red-800 to-red-950 text-red-300 font-black rounded-xl text-sm active:from-red-700 active:to-red-900 shadow-lg border border-red-700/30"
+                className="flex-1 py-3 bg-gradient-to-b from-red-800 to-red-950 text-red-300 font-black rounded-xl text-xs active:from-red-700 active:to-red-900 shadow-lg border border-red-700/30"
               >
                 FOLD
               </button>
@@ -251,20 +273,29 @@ export function ActionPanel({ gameState, onAction, onUseTimeBank }: ActionPanelP
       {/* === PC版 === */}
       <div className="hidden sm:block">
         {/* タイマーバー */}
-        <div className="h-2 bg-gray-800 w-full">
-          <div
-            className={`h-full ${
-              timerPercent < 25 ? 'bg-red-500' : timerPercent < 50 ? 'bg-yellow-500' : 'bg-emerald-500'
-            } transition-all duration-1000 ease-linear`}
-            style={{ width: `${timerPercent}%` }}
-          />
-        </div>
+        {isMyTurn && (
+          <div className="h-1.5 bg-gray-800 w-full">
+            <div
+              className={`h-full ${
+                timerPercent < 25 ? 'bg-red-500' : timerPercent < 50 ? 'bg-yellow-500' : 'bg-emerald-500'
+              } transition-all duration-1000 ease-linear`}
+              style={{ width: `${timerPercent}%` }}
+            />
+          </div>
+        )}
 
-        <div className="p-3 md:p-4">
-          {/* タイマー＆タイムバンク表示 */}
+        <div className="px-4 py-3">
+          {/* 自分のカード + タイマー行 */}
           <div className="flex items-center justify-between mb-3 max-w-4xl mx-auto">
-            <div className="flex items-center gap-2">
-              <span className={`text-xl font-mono font-black ${
+            <div className="flex items-center gap-3">
+              {/* 自分のカード */}
+              {myCards && myCards.length === 2 && (
+                <div className="flex gap-1.5">
+                  <CardComponent card={myCards[0]} size="md" />
+                  <CardComponent card={myCards[1]} size="md" />
+                </div>
+              )}
+              <span className={`text-lg font-mono font-black ${
                 actionTimerRemaining <= 10 ? 'text-red-400 animate-pulse' : 'text-white'
               }`}>
                 {actionTimerRemaining}秒
@@ -315,7 +346,7 @@ export function ActionPanel({ gameState, onAction, onUseTimeBank }: ActionPanelP
               </div>
 
               <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-400 w-20">{formatBB(availableActions.minRaise, bigBlind)}BB</span>
+                <span className="text-xs text-gray-400 w-16">{formatBB(availableActions.minRaise, bigBlind)}BB</span>
                 <input
                   type="range"
                   min={availableActions.minRaise}
@@ -324,7 +355,7 @@ export function ActionPanel({ gameState, onAction, onUseTimeBank }: ActionPanelP
                   onChange={(e) => setCustomRaiseAmount(Number(e.target.value))}
                   className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
                 />
-                <span className="text-xs text-gray-400 w-20 text-right">{formatBB(availableActions.maxRaise, bigBlind)}BB</span>
+                <span className="text-xs text-gray-400 w-16 text-right">{formatBB(availableActions.maxRaise, bigBlind)}BB</span>
               </div>
 
               <div className="flex items-center justify-between mt-3">
@@ -358,9 +389,9 @@ export function ActionPanel({ gameState, onAction, onUseTimeBank }: ActionPanelP
                 <button
                   key={i}
                   onClick={() => handleRaise(preset.amount)}
-                  className="px-4 py-2.5 bg-emerald-700/80 hover:bg-emerald-600 active:bg-emerald-500 text-white font-bold rounded-lg transition text-sm shadow-md min-w-[80px]"
+                  className="px-4 py-2 bg-emerald-700/80 hover:bg-emerald-600 active:bg-emerald-500 text-white font-bold rounded-lg transition text-sm shadow-md min-w-[70px]"
                 >
-                  <div className="text-xs opacity-80">{isBetAction ? 'ベット' : 'レイズ'}</div>
+                  <div className="text-[10px] opacity-80">{isBetAction ? 'ベット' : 'レイズ'}</div>
                   <div className="font-black">{preset.label}</div>
                 </button>
               ))}
@@ -369,9 +400,9 @@ export function ActionPanel({ gameState, onAction, onUseTimeBank }: ActionPanelP
                   setCustomRaiseAmount(availableActions.minRaise);
                   setShowRaisePanel(true);
                 }}
-                className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 active:bg-gray-500 text-white font-bold rounded-lg transition text-sm shadow-md"
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 active:bg-gray-500 text-white font-bold rounded-lg transition text-sm shadow-md"
               >
-                <div className="text-xs opacity-80">カスタム</div>
+                <div className="text-[10px] opacity-80">カスタム</div>
                 <div className="font-black">⋯</div>
               </button>
             </div>
@@ -382,7 +413,7 @@ export function ActionPanel({ gameState, onAction, onUseTimeBank }: ActionPanelP
             {availableActions.canFold && (
               <button
                 onClick={() => onAction({ type: 'fold' })}
-                className="flex-none px-6 py-4 bg-gradient-to-b from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 active:from-red-500 active:to-red-700 text-white font-black rounded-xl transition min-w-[120px] text-base shadow-lg border border-red-500/30"
+                className="flex-none px-5 py-3 bg-gradient-to-b from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 active:from-red-500 active:to-red-700 text-white font-black rounded-xl transition min-w-[100px] text-sm shadow-lg border border-red-500/30"
               >
                 フォールド
               </button>
@@ -391,7 +422,7 @@ export function ActionPanel({ gameState, onAction, onUseTimeBank }: ActionPanelP
             {availableActions.canCheck && (
               <button
                 onClick={() => onAction({ type: 'check' })}
-                className="flex-none px-6 py-4 bg-gradient-to-b from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 active:from-blue-400 active:to-blue-600 text-white font-black rounded-xl transition min-w-[120px] text-base shadow-lg border border-blue-400/30"
+                className="flex-none px-5 py-3 bg-gradient-to-b from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 active:from-blue-400 active:to-blue-600 text-white font-black rounded-xl transition min-w-[100px] text-sm shadow-lg border border-blue-400/30"
               >
                 チェック
               </button>
@@ -400,30 +431,30 @@ export function ActionPanel({ gameState, onAction, onUseTimeBank }: ActionPanelP
             {availableActions.canCall && (
               <button
                 onClick={() => onAction({ type: 'call' })}
-                className="flex-none px-6 py-4 bg-gradient-to-b from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 active:from-blue-400 active:to-blue-600 text-white font-black rounded-xl transition min-w-[120px] text-base shadow-lg border border-blue-400/30"
+                className="flex-none px-5 py-3 bg-gradient-to-b from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 active:from-blue-400 active:to-blue-600 text-white font-black rounded-xl transition min-w-[100px] text-sm shadow-lg border border-blue-400/30"
               >
                 <div>コール</div>
-                <div className="text-xs opacity-80 font-mono">{formatBB(availableActions.callAmount, bigBlind)}BB</div>
+                <div className="text-[10px] opacity-80 font-mono">{formatBB(availableActions.callAmount, bigBlind)}BB</div>
               </button>
             )}
 
             {availableActions.canAllIn && !availableActions.canRaise && !availableActions.canCall && (
               <button
                 onClick={() => onAction({ type: 'allIn' })}
-                className="flex-none px-6 py-4 bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 active:from-red-300 active:to-red-500 text-white font-black rounded-xl transition min-w-[120px] text-base shadow-lg border border-red-300/30"
+                className="flex-none px-5 py-3 bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 active:from-red-300 active:to-red-500 text-white font-black rounded-xl transition min-w-[100px] text-sm shadow-lg border border-red-300/30"
               >
                 <div>オールイン</div>
-                <div className="text-xs opacity-80 font-mono">{formatBB(availableActions.allInAmount, bigBlind)}BB</div>
+                <div className="text-[10px] opacity-80 font-mono">{formatBB(availableActions.allInAmount, bigBlind)}BB</div>
               </button>
             )}
 
             {availableActions.canAllIn && availableActions.canRaise && (
               <button
                 onClick={() => onAction({ type: 'allIn' })}
-                className="flex-none px-6 py-4 bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 active:from-red-300 active:to-red-500 text-white font-black rounded-xl transition min-w-[120px] text-base shadow-lg border border-red-300/30"
+                className="flex-none px-5 py-3 bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 active:from-red-300 active:to-red-500 text-white font-black rounded-xl transition min-w-[100px] text-sm shadow-lg border border-red-300/30"
               >
                 <div>オールイン</div>
-                <div className="text-xs opacity-80 font-mono">{formatBB(availableActions.allInAmount, bigBlind)}BB</div>
+                <div className="text-[10px] opacity-80 font-mono">{formatBB(availableActions.allInAmount, bigBlind)}BB</div>
               </button>
             )}
           </div>

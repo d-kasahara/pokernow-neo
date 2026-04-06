@@ -10,53 +10,53 @@ interface PokerTableProps {
 
 // PC用: 楕円テーブル上のパーセント座標
 const SEAT_POSITIONS_DESKTOP = [
-  { top: '88%', left: '50%' },   // 0: 下部中央 (自分)
-  { top: '78%', left: '12%' },   // 1: 左下
+  { top: '82%', left: '50%' },   // 0: 下部中央 (自分) - 上に移動
+  { top: '73%', left: '12%' },   // 1: 左下
   { top: '48%', left: '3%' },    // 2: 左
   { top: '18%', left: '12%' },   // 3: 左上
   { top: '5%', left: '35%' },    // 4: 上部左
   { top: '5%', left: '65%' },    // 5: 上部右
   { top: '18%', left: '88%' },   // 6: 右上
   { top: '48%', left: '97%' },   // 7: 右
-  { top: '78%', left: '88%' },   // 8: 右下
+  { top: '73%', left: '88%' },   // 8: 右下
 ];
 
 // スマホ用: 角丸長方形テーブル上の座標
 const SEAT_POSITIONS_MOBILE = [
-  { top: '92%', left: '50%' },   // 0: 下部中央 (自分)
-  { top: '80%', left: '8%' },    // 1: 左下
-  { top: '50%', left: '3%' },    // 2: 左
-  { top: '20%', left: '8%' },    // 3: 左上
-  { top: '5%', left: '32%' },    // 4: 上部左
-  { top: '5%', left: '68%' },    // 5: 上部右
-  { top: '20%', left: '92%' },   // 6: 右上
-  { top: '50%', left: '97%' },   // 7: 右
-  { top: '80%', left: '92%' },   // 8: 右下
+  { top: '85%', left: '50%' },   // 0: 下部中央 (自分) - 上に移動
+  { top: '73%', left: '12%' },   // 1: 左下 - 内側に移動
+  { top: '48%', left: '8%' },    // 2: 左 - 内側に移動
+  { top: '22%', left: '12%' },   // 3: 左上
+  { top: '8%', left: '35%' },    // 4: 上部左
+  { top: '8%', left: '65%' },    // 5: 上部右
+  { top: '22%', left: '88%' },   // 6: 右上 - 内側に移動
+  { top: '48%', left: '92%' },   // 7: 右 - 内側に移動
+  { top: '73%', left: '88%' },   // 8: 右下 - 内側に移動
 ];
 
 // ベットチップの位置（テーブル内側に配置）
 const BET_POSITIONS_MOBILE = [
-  { top: '78%', left: '50%' },   // 0
-  { top: '70%', left: '22%' },   // 1
-  { top: '50%', left: '16%' },   // 2
-  { top: '30%', left: '22%' },   // 3
-  { top: '18%', left: '38%' },   // 4
-  { top: '18%', left: '62%' },   // 5
-  { top: '30%', left: '78%' },   // 6
-  { top: '50%', left: '84%' },   // 7
-  { top: '70%', left: '78%' },   // 8
+  { top: '72%', left: '50%' },   // 0 - 上に移動
+  { top: '65%', left: '25%' },   // 1
+  { top: '48%', left: '20%' },   // 2
+  { top: '32%', left: '25%' },   // 3
+  { top: '22%', left: '40%' },   // 4
+  { top: '22%', left: '60%' },   // 5
+  { top: '32%', left: '75%' },   // 6
+  { top: '48%', left: '80%' },   // 7
+  { top: '65%', left: '75%' },   // 8
 ];
 
 const BET_POSITIONS_DESKTOP = [
-  { top: '76%', left: '50%' },   // 0
-  { top: '68%', left: '22%' },   // 1
+  { top: '72%', left: '50%' },   // 0 - 上に移動
+  { top: '65%', left: '22%' },   // 1
   { top: '48%', left: '15%' },   // 2
   { top: '28%', left: '22%' },   // 3
   { top: '18%', left: '40%' },   // 4
   { top: '18%', left: '60%' },   // 5
   { top: '28%', left: '78%' },   // 6
   { top: '48%', left: '85%' },   // 7
-  { top: '68%', left: '78%' },   // 8
+  { top: '65%', left: '78%' },   // 8
 ];
 
 // BB単位でフォーマット
@@ -88,7 +88,7 @@ export function PokerTable({ gameState }: PokerTableProps) {
   return (
     <>
       {/* === スマホ版 === */}
-      <div className="sm:hidden relative w-full" style={{ height: 'calc(100vh - 120px)' }}>
+      <div className="sm:hidden relative w-full flex-1" style={{ minHeight: '0' }}>
         {/* テーブル本体（角丸長方形） */}
         <div className="absolute inset-3 rounded-3xl poker-table-mobile">
           {/* ブラインド情報（テーブル中央） */}
