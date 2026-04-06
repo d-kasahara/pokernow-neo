@@ -3,20 +3,25 @@
 import { useState } from 'react';
 import { BlindLevel, TournamentSettings, DEFAULT_TOURNAMENT_SETTINGS } from '../../types/game';
 
-// クライアント用ブラインドスケジュール定義
+// クライアント用ブラインドスケジュール定義（ROOTS ANNIVERSARY準拠）
 const DEFAULT_BLIND_SCHEDULE: BlindLevel[] = [
-  { level: 1, smallBlind: 10, bigBlind: 20, ante: 0 },
-  { level: 2, smallBlind: 15, bigBlind: 30, ante: 0 },
-  { level: 3, smallBlind: 25, bigBlind: 50, ante: 0 },
-  { level: 4, smallBlind: 50, bigBlind: 100, ante: 10 },
-  { level: 5, smallBlind: 75, bigBlind: 150, ante: 15 },
-  { level: 6, smallBlind: 100, bigBlind: 200, ante: 25 },
-  { level: 7, smallBlind: 150, bigBlind: 300, ante: 25 },
-  { level: 8, smallBlind: 200, bigBlind: 400, ante: 50 },
-  { level: 9, smallBlind: 300, bigBlind: 600, ante: 75 },
-  { level: 10, smallBlind: 500, bigBlind: 1000, ante: 100 },
-  { level: 11, smallBlind: 750, bigBlind: 1500, ante: 150 },
-  { level: 12, smallBlind: 1000, bigBlind: 2000, ante: 200 },
+  { level: 1,  smallBlind: 100,    bigBlind: 200,     ante: 200 },
+  { level: 2,  smallBlind: 200,    bigBlind: 400,     ante: 400 },
+  { level: 3,  smallBlind: 300,    bigBlind: 600,     ante: 600 },
+  { level: 4,  smallBlind: 400,    bigBlind: 800,     ante: 800 },
+  { level: 5,  smallBlind: 500,    bigBlind: 1000,    ante: 1000 },
+  { level: 6,  smallBlind: 700,    bigBlind: 1400,    ante: 1400 },
+  { level: 7,  smallBlind: 1000,   bigBlind: 2000,    ante: 2000 },
+  { level: 8,  smallBlind: 1500,   bigBlind: 2500,    ante: 2500 },
+  { level: 9,  smallBlind: 2000,   bigBlind: 4000,    ante: 4000 },
+  { level: 10, smallBlind: 3000,   bigBlind: 6000,    ante: 6000 },
+  { level: 11, smallBlind: 5000,   bigBlind: 10000,   ante: 10000 },
+  { level: 12, smallBlind: 7000,   bigBlind: 14000,   ante: 14000 },
+  { level: 13, smallBlind: 10000,  bigBlind: 20000,   ante: 20000 },
+  { level: 14, smallBlind: 15000,  bigBlind: 30000,   ante: 30000 },
+  { level: 15, smallBlind: 25000,  bigBlind: 50000,   ante: 50000 },
+  { level: 16, smallBlind: 50000,  bigBlind: 100000,  ante: 100000 },
+  { level: 17, smallBlind: 100000, bigBlind: 200000,  ante: 200000 },
 ];
 
 interface StructureSettingsProps {
@@ -28,28 +33,28 @@ interface StructureSettingsProps {
 const PRESETS = {
   turbo: {
     label: 'ターボ',
-    description: '5分レベル / 5,000チップ',
+    description: '10分レベル / 15,000チップ',
     settings: {
-      startingChips: 5000,
-      blindLevelDuration: 300,
+      startingChips: 15000,
+      blindLevelDuration: 600,
       blindSchedule: [] as BlindLevel[],
     },
   },
   standard: {
     label: 'スタンダード',
-    description: '10分レベル / 10,000チップ',
+    description: '20分レベル / 30,000チップ',
     settings: {
-      startingChips: 10000,
-      blindLevelDuration: 600,
+      startingChips: 30000,
+      blindLevelDuration: 1200,
       blindSchedule: [] as BlindLevel[],
     },
   },
   deep: {
     label: 'ディープスタック',
-    description: '15分レベル / 20,000チップ',
+    description: '30分レベル / 50,000チップ',
     settings: {
-      startingChips: 20000,
-      blindLevelDuration: 900,
+      startingChips: 50000,
+      blindLevelDuration: 1800,
       blindSchedule: [] as BlindLevel[],
     },
   },
@@ -82,14 +87,15 @@ export function StructureSettings({ onSave, onClose }: StructureSettingsProps) {
     setBlindSchedule(updated);
   };
 
-  // ブラインドレベル追加
+  // ブラインドレベル追加（BBアンティ = BB額）
   const addBlindLevel = () => {
     const lastLevel = blindSchedule[blindSchedule.length - 1];
+    const newBB = lastLevel.bigBlind * 2;
     setBlindSchedule([...blindSchedule, {
       level: lastLevel.level + 1,
       smallBlind: lastLevel.smallBlind * 2,
-      bigBlind: lastLevel.bigBlind * 2,
-      ante: Math.floor(lastLevel.bigBlind * 2 * 0.1),
+      bigBlind: newBB,
+      ante: newBB, // BBアンティ
     }]);
   };
 
@@ -228,7 +234,7 @@ export function StructureSettings({ onSave, onClose }: StructureSettingsProps) {
                     <th className="py-1.5 px-2 text-left">Lv</th>
                     <th className="py-1.5 px-2 text-right">SB</th>
                     <th className="py-1.5 px-2 text-right">BB</th>
-                    <th className="py-1.5 px-2 text-right">Ante</th>
+                    <th className="py-1.5 px-2 text-right">BB Ante</th>
                     {showSchedule && <th className="py-1.5 px-2"></th>}
                   </tr>
                 </thead>

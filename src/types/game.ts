@@ -33,10 +33,10 @@ export interface TournamentSettings {
   blindSchedule: BlindLevel[];  // カスタムブラインドスケジュール
 }
 
-// デフォルト設定
+// デフォルト設定（ROOTS ANNIVERSARY準拠）
 export const DEFAULT_TOURNAMENT_SETTINGS: TournamentSettings = {
-  startingChips: 10000,
-  blindLevelDuration: 600, // 10分
+  startingChips: 30000,
+  blindLevelDuration: 1200, // 20分
   actionTimeout: 30,
   maxPlayers: 9,
   timeBankCount: 3,

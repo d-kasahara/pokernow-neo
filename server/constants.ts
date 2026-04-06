@@ -1,19 +1,26 @@
 import { BlindLevel } from '../src/types/game';
 
-// デフォルトブラインドスケジュール
+// デフォルトブラインドスケジュール（ROOTS ANNIVERSARY準拠）
+// BBアンティ = BB額、Starting Stack: 30,000
 export const DEFAULT_BLIND_SCHEDULE: BlindLevel[] = [
-  { level: 1, smallBlind: 10, bigBlind: 20, ante: 0 },
-  { level: 2, smallBlind: 15, bigBlind: 30, ante: 0 },
-  { level: 3, smallBlind: 25, bigBlind: 50, ante: 0 },
-  { level: 4, smallBlind: 50, bigBlind: 100, ante: 10 },
-  { level: 5, smallBlind: 75, bigBlind: 150, ante: 15 },
-  { level: 6, smallBlind: 100, bigBlind: 200, ante: 25 },
-  { level: 7, smallBlind: 150, bigBlind: 300, ante: 25 },
-  { level: 8, smallBlind: 200, bigBlind: 400, ante: 50 },
-  { level: 9, smallBlind: 300, bigBlind: 600, ante: 75 },
-  { level: 10, smallBlind: 500, bigBlind: 1000, ante: 100 },
-  { level: 11, smallBlind: 750, bigBlind: 1500, ante: 150 },
-  { level: 12, smallBlind: 1000, bigBlind: 2000, ante: 200 },
+  { level: 1,  smallBlind: 100,    bigBlind: 200,     ante: 200 },
+  { level: 2,  smallBlind: 200,    bigBlind: 400,     ante: 400 },
+  { level: 3,  smallBlind: 300,    bigBlind: 600,     ante: 600 },
+  { level: 4,  smallBlind: 400,    bigBlind: 800,     ante: 800 },
+  { level: 5,  smallBlind: 500,    bigBlind: 1000,    ante: 1000 },
+  { level: 6,  smallBlind: 700,    bigBlind: 1400,    ante: 1400 },
+  // Break
+  { level: 7,  smallBlind: 1000,   bigBlind: 2000,    ante: 2000 },
+  { level: 8,  smallBlind: 1500,   bigBlind: 2500,    ante: 2500 },
+  { level: 9,  smallBlind: 2000,   bigBlind: 4000,    ante: 4000 },
+  { level: 10, smallBlind: 3000,   bigBlind: 6000,    ante: 6000 },
+  { level: 11, smallBlind: 5000,   bigBlind: 10000,   ante: 10000 },
+  { level: 12, smallBlind: 7000,   bigBlind: 14000,   ante: 14000 },
+  { level: 13, smallBlind: 10000,  bigBlind: 20000,   ante: 20000 },
+  { level: 14, smallBlind: 15000,  bigBlind: 30000,   ante: 30000 },
+  { level: 15, smallBlind: 25000,  bigBlind: 50000,   ante: 50000 },
+  { level: 16, smallBlind: 50000,  bigBlind: 100000,  ante: 100000 },
+  { level: 17, smallBlind: 100000, bigBlind: 200000,  ante: 200000 },
 ];
 
 // ルーム設定
