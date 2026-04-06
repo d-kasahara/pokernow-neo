@@ -17,11 +17,13 @@ interface PlayerSeatProps {
   isDealer: boolean;
   isCurrentTurn: boolean;
   myCards?: Card[] | null;
-  position: { top: string; left: string };
+  positionMobile: { top: string; left: string };
+  positionDesktop: { top: string; left: string };
   showdownCards?: Card[] | null;
-  timerPercent?: number; // 0-100 残り時間の割合
-  bigBlind: number; // BB単位表示用
-  handName?: string; // ショーダウン時の役名
+  timerPercent?: number;
+  bigBlind: number;
+  handName?: string;
+  isMobile: boolean;
 }
 
 export function PlayerSeat({
@@ -30,18 +32,32 @@ export function PlayerSeat({
   isDealer,
   isCurrentTurn,
   myCards,
-  position,
+  positionMobile,
+  positionDesktop,
   showdownCards,
   timerPercent,
   bigBlind,
   handName,
+  isMobile,
 }: PlayerSeatProps) {
   if (!player) {
     // 空席
+    if (isMobile) {
+      return (
+        <div
+          className="sm:hidden absolute transform -translate-x-1/2 -translate-y-1/2"
+          style={{ top: positionMobile.top, left: positionMobile.left }}
+        >
+          <div className="w-14 h-8 rounded-md border border-dashed border-gray-700/20 flex items-center justify-center">
+            <span className="text-gray-700 text-[8px]">空席</span>
+          </div>
+        </div>
+      );
+    }
     return (
       <div
-        className="absolute transform -translate-x-1/2 -translate-y-1/2"
-        style={{ top: position.top, left: position.left }}
+        className="hidden sm:block absolute transform -translate-x-1/2 -translate-y-1/2"
+        style={{ top: positionDesktop.top, left: positionDesktop.left }}
       >
         <div className="w-28 h-18 rounded-xl border-2 border-dashed border-gray-700/30 flex items-center justify-center">
           <span className="text-gray-700 text-xs">空席</span>
@@ -55,13 +71,105 @@ export function PlayerSeat({
   const isAllIn = player.status === 'allIn';
   const isDisconnected = !player.isConnected;
 
-  // 自分のカードはlgサイズ、他はmdサイズ
-  const cardSize = isMe ? 'lg' : 'md';
+  // === スマホ版 ===
+  if (isMobile) {
+    return (
+      <div
+        className="sm:hidden absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
+        style={{ top: positionMobile.top, left: positionMobile.left }}
+      >
+        <div className={`relative ${isEliminated ? 'opacity-40' : ''} ${isFolded ? 'opacity-50' : ''}`}>
+          {/* ディーラーボタン */}
+          {isDealer && (
+            <div className="absolute -top-1.5 -left-1.5 w-4 h-4 bg-white text-black rounded-full flex items-center justify-center text-[8px] font-black shadow-md z-30 border border-gray-400">
+              D
+            </div>
+          )}
 
+          {/* プレイヤー情報ボックス */}
+          <div
+            className={`relative rounded-lg px-2 py-1 min-w-[52px] text-center ${
+              isCurrentTurn
+                ? 'bg-gray-800 border-2 border-yellow-400 shadow-lg shadow-yellow-400/30'
+                : isMe
+                  ? 'bg-gray-800/95 border border-emerald-500/60'
+                  : 'bg-gray-800/90 border border-gray-600/50'
+            }`}
+          >
+            {/* ニックネーム */}
+            <div className={`text-[9px] font-bold truncate max-w-[50px] leading-tight ${
+              isMe ? 'text-emerald-400' : 'text-white'
+            }`}>
+              {player.nickname}
+            </div>
+
+            {/* チップ */}
+            <div className="text-[10px] text-gold font-mono font-black leading-tight">
+              {formatBB(player.chips, bigBlind)}
+            </div>
+
+            {/* ステータスバッジ */}
+            {isAllIn && (
+              <div className="text-[7px] text-red-400 font-black animate-pulse">ALL IN</div>
+            )}
+            {isFolded && (
+              <div className="text-[7px] text-gray-500">FOLD</div>
+            )}
+            {isEliminated && (
+              <div className="text-[7px] text-gray-500">OUT</div>
+            )}
+
+            {/* 接続切断 */}
+            {isDisconnected && (
+              <div className="text-[6px] text-red-400">切断</div>
+            )}
+
+            {/* アクティブプレイヤーのグロー */}
+            {isCurrentTurn && (
+              <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2">
+                <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+              </div>
+            )}
+          </div>
+
+          {/* ホールカード */}
+          <div className={`flex gap-0.5 justify-center mt-0.5 ${isFolded ? 'opacity-30' : ''}`}>
+            {isMe && myCards && myCards.length === 2 ? (
+              <>
+                <CardComponent card={myCards[0]} size="md" />
+                <CardComponent card={myCards[1]} size="md" />
+              </>
+            ) : showdownCards && showdownCards.length === 2 ? (
+              <>
+                <CardComponent card={showdownCards[0]} size="sm" />
+                <CardComponent card={showdownCards[1]} size="sm" />
+              </>
+            ) : player.hasCards && !isFolded ? (
+              <>
+                <CardComponent faceDown size="sm" />
+                <CardComponent faceDown size="sm" />
+              </>
+            ) : null}
+          </div>
+
+          {/* 役名表示（ショーダウン時） */}
+          {handName && (
+            <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap z-20">
+              <div className="bg-purple-700/90 text-white text-[8px] font-bold px-1.5 py-0.5 rounded border border-purple-400/50">
+                {handName}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // === PC版 ===
   return (
     <div
-      className="absolute transform -translate-x-1/2 -translate-y-1/2"
-      style={{ top: position.top, left: position.left }}
+      className="hidden sm:block absolute transform -translate-x-1/2 -translate-y-1/2"
+      style={{ top: positionDesktop.top, left: positionDesktop.left }}
     >
       <div className={`relative ${isEliminated ? 'opacity-40' : ''}`}>
         {/* ディーラーボタン */}
@@ -73,7 +181,7 @@ export function PlayerSeat({
 
         {/* プレイヤーカード */}
         <div className="relative">
-          {/* タイマーリング（自分のターン時） */}
+          {/* タイマーリング */}
           {isCurrentTurn && timerPercent !== undefined && (
             <div className="absolute -inset-1 rounded-2xl overflow-hidden z-0">
               <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -129,33 +237,19 @@ export function PlayerSeat({
           </div>
         </div>
 
-        {/* ベット表示 (BB単位) */}
-        {player.bet > 0 && (
-          <div className="absolute -bottom-7 left-1/2 transform -translate-x-1/2 z-20">
-            <div className="bg-gradient-to-b from-yellow-600 to-yellow-800 px-3 py-1 rounded-full border border-yellow-400/60 shadow-lg">
-              <span className="text-sm text-white font-mono font-black whitespace-nowrap drop-shadow">
-                {formatBB(player.bet, bigBlind)} BB
-              </span>
-            </div>
-          </div>
-        )}
-
         {/* ホールカード */}
         <div className={`flex gap-1.5 justify-center mt-2 ${isFolded ? 'opacity-30' : ''}`}>
           {isMe && myCards && myCards.length === 2 ? (
-            // 自分のカード（大きく表示）
             <>
-              <CardComponent card={myCards[0]} size={cardSize} />
-              <CardComponent card={myCards[1]} size={cardSize} />
+              <CardComponent card={myCards[0]} size="lg" />
+              <CardComponent card={myCards[1]} size="lg" />
             </>
           ) : showdownCards && showdownCards.length === 2 ? (
-            // ショーダウン時の相手のカード
             <>
               <CardComponent card={showdownCards[0]} size="md" />
               <CardComponent card={showdownCards[1]} size="md" />
             </>
           ) : player.hasCards && !isFolded ? (
-            // 他プレイヤーのカード（裏面）
             <>
               <CardComponent faceDown size="md" />
               <CardComponent faceDown size="md" />

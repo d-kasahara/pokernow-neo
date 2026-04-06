@@ -12,18 +12,18 @@ interface CardProps {
 // サイズ設定（xl: コミュニティカード、lg: 自分のカード、md: 他プレイヤー、sm: 小）
 const sizeConfig = {
   sm: {
-    card: 'w-12 h-16',
-    rank: 'text-base',
-    suit: 'text-sm',
-    centerSuit: 'text-3xl',
-    logo: 'text-[9px]',
+    card: 'w-10 h-14',
+    rank: 'text-sm',
+    suit: 'text-xs',
+    centerSuit: 'text-2xl',
+    logo: 'text-[7px]',
   },
   md: {
-    card: 'w-16 h-24',
-    rank: 'text-xl',
-    suit: 'text-lg',
-    centerSuit: 'text-4xl',
-    logo: 'text-xs',
+    card: 'w-14 h-20',
+    rank: 'text-lg',
+    suit: 'text-base',
+    centerSuit: 'text-3xl',
+    logo: 'text-[10px]',
   },
   lg: {
     card: 'w-24 h-36',

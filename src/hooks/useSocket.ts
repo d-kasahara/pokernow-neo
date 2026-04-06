@@ -80,7 +80,7 @@ export function useSocket(): UseSocketReturn {
       lastCurrentPlayerRef.current = state.currentPlayerIndex;
     });
 
-    // プレイヤーアクションの効果音
+    // プレイヤーアクションの効果音（各アクション個別の音）
     socket.on('game:action', (data) => {
       const action = data.action;
       switch (action) {
@@ -91,7 +91,10 @@ export function useSocket(): UseSocketReturn {
           playSoundRef.current('check');
           break;
         case 'call':
-          playSoundRef.current('chip');
+          playSoundRef.current('call');
+          break;
+        case 'bet':
+          playSoundRef.current('bet');
           break;
         case 'raise':
           playSoundRef.current('raise');

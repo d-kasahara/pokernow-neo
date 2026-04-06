@@ -23,7 +23,7 @@ body {
   color: #1a1a2e;
 }
 
-/* ポーカーテーブルのグラデーション */
+/* ポーカーテーブルのグラデーション（PC: 楕円） */
 .poker-table {
   background: radial-gradient(ellipse at center, var(--felt-light) 0%, var(--felt-color) 50%, var(--felt-dark) 100%);
   border: 8px solid #2a1810;
@@ -31,6 +31,16 @@ body {
     0 0 0 4px #8b6914,
     0 0 0 8px #2a1810,
     0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* ポーカーテーブル（スマホ: 角丸長方形） */
+.poker-table-mobile {
+  background: radial-gradient(ellipse at center, var(--felt-light) 0%, var(--felt-color) 50%, var(--felt-dark) 100%);
+  border: 6px solid #2a1810;
+  box-shadow:
+    0 0 0 3px #8b6914,
+    0 0 0 6px #2a1810,
+    0 10px 30px rgba(0, 0, 0, 0.6);
 }
 
 /* アクティブプレイヤーのパルスリング */

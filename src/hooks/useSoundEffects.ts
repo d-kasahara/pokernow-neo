@@ -9,10 +9,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  */
 
 type SoundType =
-  | 'check'       // チェック：短い木製クリック
-  | 'fold'        // フォールド：カードを置く音
-  | 'chip'        // コール/ベット：チップ音
-  | 'raise'       // レイズ：強いチップ音
+  | 'check'       // チェック：テーブルをノックする音
+  | 'fold'        // フォールド：カードを伏せる音
+  | 'bet'         // ベット：チップを1つ置く音
+  | 'call'        // コール：チップを揃える音
+  | 'raise'       // レイズ：チップを積む音
   | 'allIn'       // オールイン：ドラマティックな音
   | 'win'         // 勝利音
   | 'deal'        // カード配布
@@ -44,16 +45,21 @@ export function useSoundEffects(): UseSoundEffectsReturn {
           console.warn('AudioContext init failed', e);
         }
       }
+      // touchstartも削除対象
       window.removeEventListener('click', initAudio);
       window.removeEventListener('keydown', initAudio);
+      window.removeEventListener('touchstart', initAudio);
     };
 
+    // スマホ対応: touchstartでも初期化
     window.addEventListener('click', initAudio);
     window.addEventListener('keydown', initAudio);
+    window.addEventListener('touchstart', initAudio);
 
     return () => {
       window.removeEventListener('click', initAudio);
       window.removeEventListener('keydown', initAudio);
+      window.removeEventListener('touchstart', initAudio);
     };
   }, []);
 
@@ -65,7 +71,7 @@ export function useSoundEffects(): UseSoundEffectsReturn {
     });
   }, []);
 
-  // シンプルなトーン生成
+  // トーン生成
   const playTone = useCallback(
     (
       frequency: number,
@@ -97,13 +103,13 @@ export function useSoundEffects(): UseSoundEffectsReturn {
     []
   );
 
-  // ノイズバースト（チップ音やカード音用）
+  // ノイズバースト
   const playNoise = useCallback(
-    (duration: number, filterFreq: number = 2000, volume: number = 0.2) => {
+    (duration: number, filterFreq: number = 2000, volume: number = 0.2, filterType: BiquadFilterType = 'bandpass') => {
       const ctx = audioContextRef.current;
       if (!ctx) return;
 
-      const bufferSize = ctx.sampleRate * duration;
+      const bufferSize = Math.floor(ctx.sampleRate * duration);
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
       const data = buffer.getChannelData(0);
       for (let i = 0; i < bufferSize; i++) {
@@ -114,7 +120,7 @@ export function useSoundEffects(): UseSoundEffectsReturn {
       source.buffer = buffer;
 
       const filter = ctx.createBiquadFilter();
-      filter.type = 'bandpass';
+      filter.type = filterType;
       filter.frequency.value = filterFreq;
       filter.Q.value = 1;
 
@@ -145,33 +151,61 @@ export function useSoundEffects(): UseSoundEffectsReturn {
 
       switch (type) {
         case 'check':
-          // 木製の「コンッ」という音
-          playTone(800, 0.08, 'sine', 0.25, 0.005, 0.05);
+          // テーブルをノックする音（低い木の音 2回）
+          playTone(180, 0.06, 'sine', 0.35, 0.003, 0.04);
+          playNoise(0.04, 800, 0.12, 'lowpass');
+          setTimeout(() => {
+            playTone(160, 0.05, 'sine', 0.25, 0.003, 0.03);
+            playNoise(0.03, 700, 0.08, 'lowpass');
+          }, 80);
           break;
 
         case 'fold':
-          // カードを置く音（低めのノイズ）
-          playNoise(0.12, 600, 0.15);
+          // カードを伏せる/スライドする音（シュッ）
+          playNoise(0.15, 1200, 0.12, 'bandpass');
+          playTone(300, 0.06, 'sine', 0.08, 0.005, 0.04);
           break;
 
-        case 'chip':
-          // チップの音（高めのノイズ2回）
-          playNoise(0.05, 4000, 0.2);
-          setTimeout(() => playNoise(0.05, 3500, 0.18), 40);
+        case 'bet':
+          // チップを1つ置く音（コトン）
+          playNoise(0.04, 3500, 0.18, 'highpass');
+          playTone(1200, 0.03, 'sine', 0.1, 0.002, 0.02);
+          break;
+
+        case 'call':
+          // チップを揃える音（チャリン）
+          playNoise(0.04, 4000, 0.18, 'highpass');
+          playTone(1400, 0.04, 'sine', 0.12, 0.002, 0.02);
+          setTimeout(() => {
+            playNoise(0.03, 3800, 0.14, 'highpass');
+            playTone(1300, 0.03, 'sine', 0.08, 0.002, 0.02);
+          }, 50);
           break;
 
         case 'raise':
-          // 強めのチップ音（3回）
-          playNoise(0.05, 4500, 0.25);
-          setTimeout(() => playNoise(0.05, 4000, 0.22), 40);
-          setTimeout(() => playNoise(0.05, 3500, 0.2), 80);
+          // チップを複数積む音（チャリチャリチャリ）
+          for (let i = 0; i < 4; i++) {
+            const delay = i * 45;
+            const vol = 0.2 - i * 0.03;
+            const freq = 3800 + (i % 2) * 400;
+            setTimeout(() => {
+              playNoise(0.04, freq, vol, 'highpass');
+              playTone(1300 + i * 100, 0.03, 'sine', vol * 0.5, 0.002, 0.02);
+            }, delay);
+          }
           break;
 
         case 'allIn':
-          // ドラマティックな上昇音
-          playTone(200, 0.3, 'sawtooth', 0.15, 0.01, 0.1);
-          setTimeout(() => playTone(400, 0.3, 'sawtooth', 0.15, 0.01, 0.1), 100);
-          setTimeout(() => playTone(800, 0.4, 'sawtooth', 0.2, 0.01, 0.2), 200);
+          // ドラマティックな上昇音 + 大量チップ
+          playTone(200, 0.3, 'sawtooth', 0.12, 0.01, 0.1);
+          setTimeout(() => playTone(400, 0.3, 'sawtooth', 0.12, 0.01, 0.1), 100);
+          setTimeout(() => playTone(800, 0.4, 'sawtooth', 0.18, 0.01, 0.2), 200);
+          // チップ大量投入音
+          for (let i = 0; i < 6; i++) {
+            setTimeout(() => {
+              playNoise(0.03, 3500 + Math.random() * 1500, 0.15, 'highpass');
+            }, 300 + i * 30);
+          }
           break;
 
         case 'win':
@@ -183,13 +217,13 @@ export function useSoundEffects(): UseSoundEffectsReturn {
           break;
 
         case 'deal':
-          // カード配布音（シューッという音）
-          playNoise(0.08, 3000, 0.12);
+          // カード配布音（シュッ）
+          playNoise(0.06, 2500, 0.1, 'bandpass');
           break;
 
         case 'timerWarn':
           // 警告ビープ
-          playTone(880, 0.1, 'square', 0.15, 0.005, 0.05);
+          playTone(880, 0.1, 'square', 0.12, 0.005, 0.05);
           break;
 
         case 'yourTurn':
